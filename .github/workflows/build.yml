@@ -16,6 +16,7 @@ jobs:
           - { image: ubuntu-20.04, name: linux }
     runs-on: ${{ matrix.os.image }}
     env:
+      CI_BUILD_STAGE_NAME: build
       CI_OS_NAME: ${{ matrix.os.name }}
       CI_RUNS_ON: ${{ matrix.os.image }}
     steps:
