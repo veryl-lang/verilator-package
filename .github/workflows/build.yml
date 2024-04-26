@@ -11,10 +11,13 @@ jobs:
   build:
     strategy:
       matrix:
-        os: [ubuntu-22.04, ubuntu-20.04]
-    runs-on: ${{ matrix.os }}
+        os:
+          - { image: ubuntu-22.04, name: linux }
+          - { image: ubuntu-20.04, name: linux }
+    runs-on: ${{ matrix.os.image }}
     env:
-      CI_RUNS_ON: ${{ matrix.os }}
+      CI_OS_NAME: ${{ matrix.os.name }}
+      CI_RUNS_ON: ${{ matrix.os.image }}
     steps:
     - name: Checkout
       uses: actions/checkout@v4
