@@ -14,6 +14,7 @@ jobs:
         os:
           - { image: ubuntu-22.04, name: linux }
           - { image: ubuntu-20.04, name: linux }
+          - { image: macos-14, name: osx }
     runs-on: ${{ matrix.os.image }}
     env:
       CI_BUILD_STAGE_NAME: build
@@ -29,3 +30,15 @@ jobs:
       run: ./ci/ci-install.bash
     - name: Build
       run: ./ci/ci-script.bash
+    - name: Package
+      run: |
+        mkdir dist
+        cp LICENSE dist
+        cp README.rst dist
+        cp -r bin dist
+        cp -r include dist
+        cp *.cmake dist
+        rm dist/bin/verilator_bin_dbg
+        pushd dist
+        zip -r ../verilator-${{ matrix.os.image }}.zip .
+        popd
