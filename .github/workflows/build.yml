@@ -1,0 +1,27 @@
+name: build
+
+on:
+  workflow_dispatch:
+    inputs:
+      version:
+        type: string
+        required: true
+
+jobs:
+  build:
+    strategy:
+      matrix:
+        os: [ubuntu-22.04, ubuntu-20.04]
+    runs-on: ${{ matrix.os }}
+    env:
+      CI_RUNS_ON: ${{ matrix.os }}
+    steps:
+    - name: Checkout
+      uses: actions/checkout@v4
+      with:
+        repository: 'https://github.com/verilator/verilator'
+        ref: ${{ github.event.inputs.version }}
+    - name: Install packages for build
+      run: ./ci/ci-install.bash
+    - name: Build
+      run: ./ci/ci-script.bash
