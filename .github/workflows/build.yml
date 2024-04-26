@@ -19,7 +19,7 @@ jobs:
     - name: Checkout
       uses: actions/checkout@v4
       with:
-        repository: 'https://github.com/verilator/verilator'
+        repository: 'verilator/verilator'
         ref: ${{ github.event.inputs.version }}
     - name: Install packages for build
       run: ./ci/ci-install.bash
