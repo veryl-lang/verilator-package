@@ -19,6 +19,8 @@ jobs:
       CI_BUILD_STAGE_NAME: build
       CI_OS_NAME: ${{ matrix.os.name }}
       CI_RUNS_ON: ${{ matrix.os.image }}
+    permissions:
+      contents: write
     steps:
     - name: Checkout
       uses: actions/checkout@v4
@@ -41,3 +43,10 @@ jobs:
         pushd dist
         zip -r ../verilator-${{ matrix.os.image }}.zip .
         popd
+    - name: Release
+      uses: softprops/action-gh-release@v1
+      with:
+        name: ${{ github.event.inputs.version }}
+        files: "*.zip"
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
