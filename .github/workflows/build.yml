@@ -14,7 +14,6 @@ jobs:
         os:
           - { image: ubuntu-22.04, name: linux }
           - { image: ubuntu-20.04, name: linux }
-          - { image: macos-14, name: osx }
     runs-on: ${{ matrix.os.image }}
     env:
       CI_BUILD_STAGE_NAME: build
