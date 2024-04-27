@@ -1,11 +1,9 @@
 name: build
 
 on:
-  workflow_dispatch:
-    inputs:
-      version:
-        type: string
-        required: true
+  push:
+    tags:
+      - 'v*.*.*'
 
 jobs:
   build:
@@ -22,11 +20,14 @@ jobs:
     permissions:
       contents: write
     steps:
+    - name: Setup variables
+       id: variables
+       run: echo "::set-output name=tag::${GITHUB_REF##*/}"
     - name: Checkout
       uses: actions/checkout@v4
       with:
         repository: 'verilator/verilator'
-        ref: ${{ github.event.inputs.version }}
+        ref: ${{ steps.variables.outputs.tag }}
     - name: Install packages for build
       run: ./ci/ci-install.bash
     - name: Build
@@ -46,7 +47,6 @@ jobs:
     - name: Release
       uses: softprops/action-gh-release@v1
       with:
-        name: ${{ github.event.inputs.version }}
         files: "*.zip"
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
