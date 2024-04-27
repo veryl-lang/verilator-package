@@ -21,8 +21,8 @@ jobs:
       contents: write
     steps:
     - name: Setup variables
-       id: variables
-       run: echo "::set-output name=tag::${GITHUB_REF##*/}"
+      id: variables
+      run: echo "::set-output name=tag::${GITHUB_REF##*/}"
     - name: Checkout
       uses: actions/checkout@v4
       with:
