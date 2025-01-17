@@ -1,0 +1,28 @@
+name: check_release
+
+on:
+  workflow_dispatch:
+  schedule:
+  - cron: 0 0 * * SUN
+
+jobs:
+  check_release:
+    runs-on: ubuntu-latest
+    steps:
+    - name: Checkout
+      uses: actions/checkout@v4
+    - uses: oprypin/find-latest-tag@v1
+      with:
+        repository: verilator/verilator
+      id: verilator
+    - uses: oprypin/find-latest-tag@v1
+      with:
+        repository: veryl-lang/verilator-package
+      id: verilator-package
+    - run: echo "The latest version of verilator is ${{ steps.verilator.outputs.tag }}"
+    - run: echo "The latest version of verilator-package is ${{ steps.verilator-package.outputs.tag }}"
+    - name: Add tag
+      if: ${{ steps.verilator.outputs.tag }} != ${{ steps.verilator-package.outputs.tag }}
+      uses: rickstaa/action-create-tag@v1
+      with:
+        tag: ${{ steps.verilator.outputs.tag }}
