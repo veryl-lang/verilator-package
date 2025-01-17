@@ -22,7 +22,7 @@ jobs:
     - run: echo "The latest version of verilator is ${{ steps.verilator.outputs.tag }}"
     - run: echo "The latest version of verilator-package is ${{ steps.verilator-package.outputs.tag }}"
     - name: Add tag
-      if: ${{ steps.verilator.outputs.tag }} != ${{ steps.verilator-package.outputs.tag }}
+      if: ${{ steps.verilator.outputs.tag != steps.verilator-package.outputs.tag }}
       uses: rickstaa/action-create-tag@v1
       with:
         tag: ${{ steps.verilator.outputs.tag }}
