@@ -4,6 +4,12 @@ on:
   push:
     tags:
       - 'v*.*'
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: 'Verilator tag to build (e.g. v5.048)'
+        required: true
+        type: string
 
 jobs:
   build:
@@ -24,7 +30,12 @@ jobs:
     steps:
     - name: Setup variables
       id: variables
-      run: echo "::set-output name=tag::${GITHUB_REF##*/}"
+      run: |
+        if [ -n "${{ inputs.tag }}" ]; then
+          echo "tag=${{ inputs.tag }}" >> $GITHUB_OUTPUT
+        else
+          echo "tag=${GITHUB_REF##*/}" >> $GITHUB_OUTPUT
+        fi
     - name: Checkout
       uses: actions/checkout@v4
       with:
@@ -50,5 +61,6 @@ jobs:
       uses: softprops/action-gh-release@v1
       with:
         files: "*.zip"
+        tag_name: ${{ steps.variables.outputs.tag }}
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

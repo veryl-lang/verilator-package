@@ -8,6 +8,9 @@ on:
 jobs:
   check_release:
     runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      actions: write
     steps:
     - name: Checkout
       uses: actions/checkout@v4
@@ -26,3 +29,8 @@ jobs:
       uses: rickstaa/action-create-tag@v1
       with:
         tag: ${{ steps.verilator.outputs.tag }}
+    - name: Trigger build
+      if: ${{ steps.verilator.outputs.tag != steps.verilator-package.outputs.tag }}
+      env:
+        GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      run: gh workflow run build.yml -f tag=${{ steps.verilator.outputs.tag }}
