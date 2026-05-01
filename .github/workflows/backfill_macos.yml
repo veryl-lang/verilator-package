@@ -23,6 +23,8 @@ jobs:
       with:
         repository: 'verilator/verilator'
         ref: ${{ inputs.tag }}
+    - name: Install extra brew packages
+      run: brew install autoconf bison flex help2man
     - name: Install packages for build
       run: ./ci/ci-install.bash
     - name: Build
