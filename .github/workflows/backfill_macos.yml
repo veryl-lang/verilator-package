@@ -1,0 +1,48 @@
+name: backfill_macos
+
+on:
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: 'Verilator tag to build (e.g. v5.044)'
+        required: true
+        type: string
+
+jobs:
+  build:
+    runs-on: macos-15
+    env:
+      CI_BUILD_STAGE_NAME: build
+      CI_OS_NAME: osx
+      CI_RUNS_ON: macos-15
+    permissions:
+      contents: write
+    steps:
+    - name: Checkout
+      uses: actions/checkout@v4
+      with:
+        repository: 'verilator/verilator'
+        ref: ${{ inputs.tag }}
+    - name: Install packages for build
+      run: ./ci/ci-install.bash
+    - name: Build
+      run: ./ci/ci-script.bash
+    - name: Package
+      run: |
+        mkdir dist
+        cp LICENSE dist
+        cp README.rst dist
+        cp -r bin dist
+        cp -r include dist
+        cp *.cmake dist
+        rm dist/bin/verilator_bin_dbg
+        pushd dist
+        zip -r ../verilator-macos-15.zip .
+        popd
+    - name: Release
+      uses: softprops/action-gh-release@v1
+      with:
+        files: "*.zip"
+        tag_name: ${{ inputs.tag }}
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
