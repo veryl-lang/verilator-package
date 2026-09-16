@@ -47,6 +47,10 @@ jobs:
         if [ -f ./ci/ci-common.bash ]; then
           ./ci/ci-install.bash build
         else
+          # The older script installs no macOS build tools
+          if [ "$CI_OS_NAME" = osx ]; then
+            brew install autoconf bison flex help2man
+          fi
           ./ci/ci-install.bash
         fi
     - name: Build
