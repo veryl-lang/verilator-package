@@ -42,9 +42,22 @@ jobs:
         repository: 'verilator/verilator'
         ref: ${{ steps.variables.outputs.tag }}
     - name: Install packages for build
-      run: ./ci/ci-install.bash
+      run: |
+        # v5.052 replaced the environment-driven interface with a stage argument
+        if [ -f ./ci/ci-common.bash ]; then
+          ./ci/ci-install.bash build
+        else
+          ./ci/ci-install.bash
+        fi
     - name: Build
-      run: ./ci/ci-script.bash
+      env:
+        # ccache comes with the build dependencies but gains nothing on a fresh runner
+        OBJCACHE: ''
+      run: |
+        autoconf
+        # An empty prefix keeps the archive relocatable
+        ./configure --prefix=
+        make -j $(nproc 2>/dev/null || sysctl -n hw.logicalcpu)
     - name: Package
       run: |
         mkdir dist

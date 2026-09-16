@@ -14,23 +14,32 @@ jobs:
     steps:
     - name: Checkout
       uses: actions/checkout@v4
-    - uses: oprypin/find-latest-tag@v1
-      with:
-        repository: verilator/verilator
-      id: verilator
-    - uses: oprypin/find-latest-tag@v1
-      with:
-        repository: veryl-lang/verilator-package
-      id: verilator-package
-    - run: echo "The latest version of verilator is ${{ steps.verilator.outputs.tag }}"
-    - run: echo "The latest version of verilator-package is ${{ steps.verilator-package.outputs.tag }}"
-    - name: Add tag
-      if: ${{ steps.verilator.outputs.tag != steps.verilator-package.outputs.tag }}
-      uses: rickstaa/action-create-tag@v1
-      with:
-        tag: ${{ steps.verilator.outputs.tag }}
-    - name: Trigger build
-      if: ${{ steps.verilator.outputs.tag != steps.verilator-package.outputs.tag }}
+    - name: Trigger build of missing releases
       env:
         GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-      run: gh workflow run build.yml -f tag=${{ steps.verilator.outputs.tag }}
+      run: |
+        tags() {
+          gh api --paginate "repos/$1/tags" --jq '.[].name' | grep -E '^v[0-9]+\.[0-9]+$'
+        }
+        tags verilator/verilator > upstream.txt
+        tags "$GITHUB_REPOSITORY" > current.txt
+        latest=$(sort -V current.txt | tail -1)
+        echo "The latest version of verilator-package is $latest"
+        for tag in $(grep -vxF -f current.txt upstream.txt); do
+          # Tags older than ours predate this repository and are not republished
+          if [ "$(printf '%s\n%s\n' "$latest" "$tag" | sort -V | tail -1)" != "$tag" ]; then
+            continue
+          fi
+          echo "Triggering build of $tag"
+          gh workflow run build.yml -f tag="$tag"
+        done
+    - name: Keep the schedule trigger alive
+      # GitHub disables a scheduled workflow after 60 days without repository activity
+      run: |
+        age=$(( ( $(date +%s) - $(git log -1 --format=%ct) ) / 86400 ))
+        if [ "$age" -ge 45 ]; then
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git commit --allow-empty -m 'Keep the scheduled workflow alive'
+          git push origin "HEAD:$GITHUB_REF_NAME"
+        fi
