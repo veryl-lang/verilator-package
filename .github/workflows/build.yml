@@ -10,17 +10,41 @@ on:
         description: 'Verilator tag to build (e.g. v5.048)'
         required: true
         type: string
+      image:
+        description: 'Build only this runner image (e.g. ubuntu-26.04); all if empty'
+        required: false
+        type: string
 
 jobs:
+  matrix:
+    runs-on: ubuntu-latest
+    outputs:
+      os: ${{ steps.select.outputs.os }}
+    steps:
+    - name: Select images
+      id: select
+      env:
+        IMAGE: ${{ inputs.image }}
+        OS: |
+          [
+            { "image": "ubuntu-26.04", "name": "linux" },
+            { "image": "ubuntu-24.04", "name": "linux" },
+            { "image": "ubuntu-22.04", "name": "linux" },
+            { "image": "macos-15",     "name": "osx" }
+          ]
+      run: |
+        os=$(jq -c --arg image "$IMAGE" 'map(select($image == "" or .image == $image))' <<< "$OS")
+        if [ "$os" = "[]" ]; then
+          echo "Unknown image: $IMAGE" >&2
+          exit 1
+        fi
+        echo "os=$os" >> "$GITHUB_OUTPUT"
   build:
+    needs: matrix
     strategy:
       fail-fast: false
       matrix:
-        os:
-          - { image: ubuntu-26.04, name: linux }
-          - { image: ubuntu-24.04, name: linux }
-          - { image: ubuntu-22.04, name: linux }
-          - { image: macos-15,     name: osx }
+        os: ${{ fromJSON(needs.matrix.outputs.os) }}
     runs-on: ${{ matrix.os.image }}
     env:
       CI_BUILD_STAGE_NAME: build
