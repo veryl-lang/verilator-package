@@ -79,13 +79,15 @@ jobs:
           ./ci/ci-install.bash
         fi
     - name: Build
-      env:
-        # ccache comes with the build dependencies but gains nothing on a fresh runner
-        OBJCACHE: ''
       run: |
+        # configure records the mold and ccache it finds into verilated.mk,
+        # which would make them a requirement wherever the archive is used
+        if command -v mold > /dev/null; then
+          sudo apt-get remove --yes mold
+        fi
         autoconf
         # An empty prefix keeps the archive relocatable
-        ./configure --prefix=
+        ./configure --prefix= ac_cv_prog_OBJCACHE=
         make -j $(nproc 2>/dev/null || sysctl -n hw.logicalcpu)
     - name: Package
       run: |
